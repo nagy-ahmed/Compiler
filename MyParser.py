@@ -6,9 +6,9 @@ tokens = [
     ("LBrace", "{"),
     ("Keyword", "if"),
     ("LParen", "("),
-    ("ID", "x"),
+    ("ID", "true"),
     ("Equal", "=="),
-    ("Number", "4"),
+    ("ID", "true"),
     ("RParen", ")"),
     ("LBrace", "{"),
     ("Keyword", "int"),
@@ -23,29 +23,8 @@ tokens = [
     ("ID", "y"),
     ("Assign", "="),
     ("Number", "0"),
-    ("RBrace", "}"),
-    ("Keyword", "for"),
-    ("LParen", "("),
-    ("Keyword", "int"),
-    ("ID", "i"),
-    ("Assign", "="),
-    ("Number", "0"),
-    ("Semicolon", ";"),
-    ("ID", "i"),
-    ("Less", "<"),
-    ("Number", "10"),
-    ("Semicolon", ";"),
-    ("ID", "i"),
-    ("Increase", "++"),
-    ("RParen", ")"),
-    ("LBrace", "{"),
-    ("ID", "x"),
-    ("Increase", "++"),
     ("Semicolon", ";"),
     ("RBrace", "}"),
-    ("Keyword", "return"),
-    ("Number", "0"),
-    ("Semicolon", ";"),
     ("RBrace", "}"),
 ]
 
@@ -100,17 +79,15 @@ class Parser:
     def parse_block(self):
         if not self.match("LBrace"):
             self.error("{")
-        while not self.match("RBrace") and not (
-            self.tokens[self.current_index][0] == "Keyword"
-            and self.tokens[self.current_index][1] == "return"
-        ):
-            self.parse_statement()
-        if (
-            self.tokens[self.current_index][0] == "Keyword"
-            and self.tokens[self.current_index][1] == "return"
-        ):
-            self.parse_return_statement()
-        elif not self.match("RBrace"):
+
+        # while not self.match("RBrace") and not (
+        #     self.tokens[self.current_index][0] == "Keyword"
+        #     and self.tokens[self.current_index][1] == "return"
+        # ):
+
+        self.parse_statement()
+
+        if not self.match("RBrace"):
             self.error("}")
 
     def parse_statement(self):
