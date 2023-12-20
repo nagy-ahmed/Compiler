@@ -1,14 +1,4 @@
-tokens = [
-    ("Keyword", "int"),
-    ("ID", "x"),
-    ("Assign", "="),
-    ("ID", "c"),
-    ("Plus", "+"),
-    ("Number", "4"),
-    ("Minus", "-"),
-    ("Number", "4"),
-    ("Semicolon", ";"),
-]
+tokens = [("ID", "x"), ("Equal", "=="), ("ID", "55")]
 
 
 class Token:
@@ -24,12 +14,12 @@ class Parser:
 
     def parse(self):
         try:
-            self.parse_declaration()
+            self.parse_expression()
             print("Code is syntactically correct.")
         except SyntaxError as e:
             print(f"SyntaxError: {e}")
 
-    #check if current_token match ecpected or not , and increment current_index 
+    # check if current_token match ecpected or not , and increment current_index
     def match(self, expected_type):
         if (
             self.current_index < len(self.tokens)
@@ -41,11 +31,11 @@ class Parser:
         else:
             return False
 
-    #according to place of error this function is work, to show what is the error
+    # according to place of error this function is work, to show what is the error
     def error(self, expected_type):
         exit(f"Expected {expected_type}, got {self.tokens[self.current_index][0]}")
 
-    #function related to check declaration statements
+    # function related to check declaration statements
     def parse_declaration(self):
         # int x = y
         if not self.match("Keyword"):
@@ -76,8 +66,25 @@ class Parser:
             if not self.match("ID") and not self.match("Number"):
                 self.error("ID or Number")
 
-            if(self.match("Semicolon")):
+            if self.match("Semicolon"):
                 break
+
+    # check expression x == > < >= <= y,number
+    def parse_expression(self):
+        if not self.match("ID"):
+            self.error("ID or Number")
+
+        if (
+            not self.match("Less")
+            and not self.match("Lesser")
+            and not self.match("Equal")
+            and not self.match("Great")
+            and not self.match("Greater")
+        ):
+            self.error("Operator")
+
+        if not self.match("ID") and not self.match("Number"):
+            self.error("ID or Number")
 
 
 parser = Parser(tokens)
