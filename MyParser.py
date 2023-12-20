@@ -1,4 +1,53 @@
-tokens = [("ID", "x"), ("Equal", "=="), ("ID", "55")]
+tokens = [
+    ("Keyword", "int"),
+    ("ID", "main"),
+    ("LParen", "("),
+    ("RParen", ")"),
+    ("LBrace", "{"),
+    ("Keyword", "if"),
+    ("LParen", "("),
+    ("ID", "x"),
+    ("Equal", "=="),
+    ("Number", "4"),
+    ("RParen", ")"),
+    ("LBrace", "{"),
+    ("Keyword", "int"),
+    ("ID", "x"),
+    ("Assign", "="),
+    ("Number", "1"),
+    ("Semicolon", ";"),
+    ("RBrace", "}"),
+    ("Keyword", "else"),
+    ("LBrace", "{"),
+    ("Keyword", "int"),
+    ("ID", "y"),
+    ("Assign", "="),
+    ("Number", "0"),
+    ("RBrace", "}"),
+    ("Keyword", "for"),
+    ("LParen", "("),
+    ("Keyword", "int"),
+    ("ID", "i"),
+    ("Assign", "="),
+    ("Number", "0"),
+    ("Semicolon", ";"),
+    ("ID", "i"),
+    ("Less", "<"),
+    ("Number", "10"),
+    ("Semicolon", ";"),
+    ("ID", "i"),
+    ("Increase", "++"),
+    ("RParen", ")"),
+    ("LBrace", "{"),
+    ("ID", "x"),
+    ("Increase", "++"),
+    ("Semicolon", ";"),
+    ("RBrace", "}"),
+    ("Keyword", "return"),
+    ("Number", "0"),
+    ("Semicolon", ";"),
+    ("RBrace", "}"),
+]
 
 
 class Token:
@@ -14,8 +63,8 @@ class Parser:
 
     def parse(self):
         try:
-            self.parse_expression()
-            print("Code is syntactically correct.")
+            self.parse_function()
+            exit("Code is syntactically correct.")
         except SyntaxError as e:
             print(f"SyntaxError: {e}")
 
@@ -35,6 +84,88 @@ class Parser:
     def error(self, expected_type):
         exit(f"Expected {expected_type}, got {self.tokens[self.current_index][0]}")
 
+    # check function structure
+    # DataType ID () Block
+    def parse_function(self):
+        if not self.match("Keyword"):
+            self.error("Data Type of Function")
+        if not self.match("ID"):
+            self.error("Name of Function")
+        if not self.match("LParen"):
+            self.error("(")
+        if not self.match("RParen"):
+            self.error(")")
+        self.parse_block()
+
+    def parse_block(self):
+        if not self.match("LBrace"):
+            self.error("{")
+        while not self.match("RBrace") and not (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "return"
+        ):
+            self.parse_statement()
+        if (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "return"
+        ):
+            self.parse_return_statement()
+        elif not self.match("RBrace"):
+            self.error("}")
+
+    def parse_statement(self):
+        if (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "if"
+        ):
+            self.parse_if_statement()
+        elif (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "for"
+        ):
+            self.parse_for_loop()
+        elif (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "int"
+        ):
+            self.parse_declaration()
+        elif (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "return"
+        ):
+            self.parse_return_statement()
+
+        else:
+            raise SyntaxError("Invalid statement")
+
+    def parse_if_statement(self):
+        self.match("Keyword")
+        self.match("LParen")
+        self.parse_expression()
+        self.match("RParen")
+        self.parse_block()
+        if (
+            self.tokens[self.current_index][0] == "Keyword"
+            and self.tokens[self.current_index][1] == "else"
+        ):
+            self.match("Keyword")
+            self.parse_block()
+
+    def parse_for_loop(self):
+        self.match("Keyword")
+        self.match("LParen")
+        self.parse_declaration()
+        self.parse_expression()
+        self.match("Semicolon")
+        self.parse_expression()
+        self.match("RParen")
+        self.parse_block()
+
+    def parse_return_statement(self):
+        self.match("Keyword")
+        self.match("Number")
+        self.match("Semicolon")
+
     # function related to check declaration statements
     def parse_declaration(self):
         # int x = y
@@ -53,21 +184,22 @@ class Parser:
         if not self.match("ID") and not self.match("Number"):
             self.error("ID or Number")
 
-        # *4-z+5;
-        while True:
-            if (
-                not self.match("Plus")
-                and not self.match("Mul")
-                and not self.match("Minus")
-                and not self.match("Div")
-            ):
-                self.error("Operator")
+        if self.match("Semicolon"):
+            return
+        # *4+u;
+        if (
+            not self.match("Plus")
+            and not self.match("Mul")
+            and not self.match("Minus")
+            and not self.match("Div")
+        ):
+            self.error("Operator")
 
-            if not self.match("ID") and not self.match("Number"):
-                self.error("ID or Number")
+        if not self.match("ID") and not self.match("Number"):
+            self.error("ID or Number")
 
-            if self.match("Semicolon"):
-                break
+        if not self.match("Semicolon"):
+            self.error("Semicolon")
 
     # check expression x == > < >= <= y,number
     def parse_expression(self):
