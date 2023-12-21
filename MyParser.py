@@ -25,6 +25,30 @@ tokens = [
     ("Number", "0"),
     ("Semicolon", ";"),
     ("RBrace", "}"),
+    ("Keyword", "for"),
+    ("LParen", "("),
+    ("Keyword", "int"),
+    ("ID", "i"),
+    ("Assign", "="),
+    ("Number", "0"),
+    ("Semicolon", ";"),
+    ("ID", "i"),
+    ("Lesser", "<"),
+    ("Number", "10"),
+    ("Semicolon", ";"),
+    ("ID", "i"),
+    ("Increase", "++"),
+    ("RParen", ")"),
+    ("LBrace", "{"),
+    ("Keyword", "int"),
+    ("ID", "x"),
+    ("Assign", "="),
+    ("Number", "10"),
+    ("Semicolon", ";"),
+    ("RBrace", "}"),
+    ("Keyword", "return"),
+    ("Number", "0"),
+    ("Semicolon", ";"),
     ("RBrace", "}"),
 ]
 
@@ -74,18 +98,27 @@ class Parser:
             self.error("(")
         if not self.match("RParen"):
             self.error(")")
+
         self.parse_block()
 
     def parse_block(self):
         if not self.match("LBrace"):
             self.error("{")
 
-        # while not self.match("RBrace") and not (
-        #     self.tokens[self.current_index][0] == "Keyword"
-        #     and self.tokens[self.current_index][1] == "return"
-        # ):
+        while (
+            self.tokens[self.current_index][1] == "if"
+            or self.tokens[self.current_index][1] == "for"
+            or self.tokens[self.current_index][1] == "int"
+        ):
+            self.parse_statement()
 
-        self.parse_statement()
+        # keyword is return ولا شي غيرها
+        if self.tokens[self.current_index][1] == "return":
+            self.match("Keyword")
+            if not self.match("Number"):
+                self.error("Number")
+            if not self.match("Semicolon"):
+                self.error("Semicolon")
 
         if not self.match("RBrace"):
             self.error("}")
@@ -106,14 +139,6 @@ class Parser:
             and self.tokens[self.current_index][1] == "int"
         ):
             self.parse_declaration()
-        elif (
-            self.tokens[self.current_index][0] == "Keyword"
-            and self.tokens[self.current_index][1] == "return"
-        ):
-            self.parse_return_statement()
-
-        else:
-            raise SyntaxError("Invalid statement")
 
     def parse_if_statement(self):
         self.match("Keyword")
@@ -134,14 +159,9 @@ class Parser:
         self.parse_declaration()
         self.parse_expression()
         self.match("Semicolon")
-        self.parse_expression()
+        self.parse_assignment()
         self.match("RParen")
         self.parse_block()
-
-    def parse_return_statement(self):
-        self.match("Keyword")
-        self.match("Number")
-        self.match("Semicolon")
 
     # function related to check declaration statements
     def parse_declaration(self):
@@ -177,6 +197,14 @@ class Parser:
 
         if not self.match("Semicolon"):
             self.error("Semicolon")
+
+    # check x++ ,x--
+    def parse_assignment(self):
+        if not self.match("ID"):
+            self.error("ID")
+
+        if not self.match("Increase") and not self.match("Decrease"):
+            self.error("inc , dec")
 
     # check expression x == > < >= <= y,number
     def parse_expression(self):
