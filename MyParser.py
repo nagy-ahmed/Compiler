@@ -1,20 +1,43 @@
+#Example of original C code 
+#  int main() {
+#     if (true == true) {
+#         int x = 1;
+#     } else {
+#         int y = 0;
+#     }
+#     for (int i = 0; i < 10; i++) {
+#         x = 10;
+#         x = 10;
+#         x++;
+#     }
+#     return 0;
+# }
+
+# the token of that code
 tokens = [
     ("Keyword", "int"),
     ("ID", "main"),
     ("LParen", "("),
     ("RParen", ")"),
     ("LBrace", "{"),
-    ("Keyword", "if"),
-    ("LParen", "("),
-    ("ID", "true"),
-    ("Equal", "=="),
-    ("ID", "true"),
-    ("RParen", ")"),
-    ("LBrace", "{"),
     ("Keyword", "int"),
     ("ID", "x"),
     ("Assign", "="),
     ("Number", "1"),
+    ("Semicolon", ";"),
+    ("Keyword", "if"),
+    ("LParen", "("),
+    ("ID", "x"),
+    ("Equal", "=="),
+    ("Number", "5"),
+    ("RParen", ")"),
+    ("LBrace", "{"),
+    ("Keyword", "int"),
+    ("ID", "z"),
+    ("Assign", "="),
+    ("Number", "3"),
+    ("Plus", "+"),
+    ("Number", "4"),
     ("Semicolon", ";"),
     ("RBrace", "}"),
     ("Keyword", "else"),
@@ -40,10 +63,16 @@ tokens = [
     ("Increase", "++"),
     ("RParen", ")"),
     ("LBrace", "{"),
-    ("Keyword", "int"),
     ("ID", "x"),
     ("Assign", "="),
     ("Number", "10"),
+    ("Semicolon", ";"),
+    ("ID", "r"),
+    ("Assign", "="),
+    ("Number", "20"),
+    ("Semicolon", ";"),
+    ("ID", "x"),
+    ("Increase", "++"),
     ("Semicolon", ";"),
     ("RBrace", "}"),
     ("Keyword", "return"),
@@ -51,7 +80,6 @@ tokens = [
     ("Semicolon", ";"),
     ("RBrace", "}"),
 ]
-
 
 class Token:
     def __init__(self, token_type, value=None):
@@ -108,7 +136,11 @@ class Parser:
         while (
             self.tokens[self.current_index][1] == "if"
             or self.tokens[self.current_index][1] == "for"
-            or self.tokens[self.current_index][1] == "int"
+            or (
+                self.tokens[self.current_index][0] == "Keyword"
+                and not self.tokens[self.current_index][1] == "return"
+            )
+            or self.tokens[self.current_index][0] == "ID"
         ):
             self.parse_statement()
 
@@ -139,6 +171,8 @@ class Parser:
             and self.tokens[self.current_index][1] == "int"
         ):
             self.parse_declaration()
+        elif self.tokens[self.current_index][0] == "ID":
+            self.parse_assignment()
 
     def parse_if_statement(self):
         self.match("Keyword")
@@ -203,8 +237,45 @@ class Parser:
         if not self.match("ID"):
             self.error("ID")
 
-        if not self.match("Increase") and not self.match("Decrease"):
-            self.error("inc , dec")
+        if (
+            self.tokens[self.current_index][1] == "++"
+            or self.tokens[self.current_index][1] == "--"
+        ):
+            if not self.match("Increase") and not self.match("Decrease"):
+                self.error("inc , dec")
+            # next=(self.current_index + 1 )
+            if self.tokens[self.current_index][1] == ")":
+                return
+            if not self.match("Semicolon"):
+                self.error("Semicolon")
+        if self.tokens[self.current_index][1] == "=":
+            if (
+                not self.match("Assign")
+                and not self.match("NotEqu")
+                and not self.match("AddAssign")
+                and not self.match("SubAssign")
+                and not self.match("MulAssign")
+            ):
+                self.error("Assign")
+            if not self.match("ID") and not self.match("Number"):
+                self.error("ID or Number")
+
+            if self.match("Semicolon"):
+                return
+            # *4+u;
+            if (
+                not self.match("Plus")
+                and not self.match("Mul")
+                and not self.match("Minus")
+                and not self.match("Div")
+            ):
+                self.error("Operator")
+
+            if not self.match("ID") and not self.match("Number"):
+                self.error("ID or Number")
+
+            if not self.match("Semicolon"):
+                self.error("Semicolon")
 
     # check expression x == > < >= <= y,number
     def parse_expression(self):
